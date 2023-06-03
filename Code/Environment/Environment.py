@@ -7,6 +7,8 @@ from Code.Environment.Customer import Customer
 class Environment:
     def __init__(self):
         self.users = []
+        self.prices = [150, 175, 190, 210, 225]
+        self.margin = 0.4
 
     def generate_users(self, num_users):
         # Generate a list of random users with random features
