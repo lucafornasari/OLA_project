@@ -1,7 +1,10 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 from Code.Environment.Customer import Customer
+import joblib
 
 
 class Environment:
@@ -9,6 +12,7 @@ class Environment:
         self.users = []
         self.prices = [150, 175, 190, 210, 225]
         self.margin = 0.4
+        self.bids = np.linspace(0.0, 1.0, 100)
 
     def generate_users(self, num_users):
         # Generate a list of random users with random features
@@ -22,8 +26,8 @@ class Environment:
         # Define the function for number of clicks for a specific class
         # Return the number of clicks based on the bid and user class
         if _user_class == "C1":
-            _clicks = 0.8 * bid + 10
-            sigma = 1
+            _clicks = (1.0 - np.exp(-5.0*bid)) * 100
+            sigma = 5.0
         elif _user_class == "C2":
             _clicks = 0.5 * bid + 5
             sigma = 2
@@ -33,7 +37,7 @@ class Environment:
         else:
             return None  # Handle the case if features do not match any class
 
-        return max(0, _clicks + np.random.normal(0, sigma))
+        return _clicks + np.random.normal(0, sigma)
 
     def get_costs(self, bid, _user_class):
         # Define the function for cumulative cost for a specific class
@@ -67,6 +71,58 @@ class Environment:
     def purchase_decision(self, price, _user_class):
         probability = self.get_conversion_prob(price, _user_class)
         return np.random.binomial(1, probability)  # Bernoulli distribution
+
+
+
+    def generate_observations(x, _user_class, noise_std):
+        return n(x) + np.random.normal(0, noise_std, size=n(x).shape)
+
+    def clicks_learning(self, _user_class):
+        n_obs = 365
+        # for the 3 classes need to change the parameters a bit
+        x_obs = np.array([])
+        y_obs = np.array([])
+        noise_std = 5.0
+
+        for i in range(0, n_obs):
+            new_x_obs = np.random.choice(self.bids, 1)
+            new_y_obs = self.get_clicks(new_x_obs, _user_class)
+
+            x_obs = np.append(x_obs, new_x_obs)
+            y_obs = np.append(y_obs, new_y_obs)
+
+            X = np.atleast_2d(x_obs).T
+            Y = y_obs.ravel()
+
+            theta = 1.0
+            l = 1.0
+            kernel = C(theta, (1e-3, 1e3)) * RBF(l, (1e-3, 1e3))
+            gp = GaussianProcessRegressor(kernel=kernel, alpha=noise_std, normalize_y=True,
+                                          n_restarts_optimizer=10)  # alpha=noise_std**2
+
+            gp.fit(X, Y)
+
+            x_pred = np.atleast_2d(self.bids).T
+            y_pred, sigma = gp.predict(x_pred, return_std=True)
+
+            print(i)
+
+            self.plot_gp(x_pred, y_pred, X, Y, sigma, _user_class)
+        joblib.dump(gp, "model.joblib")
+
+    def plot_gp(self, _x_pred, _y_pred, _X, _Y, _sigma, _userclass):
+        plt.figure(364)
+        plt.plot(_x_pred, self.get_clicks(_x_pred, _userclass), 'r:', label=r'$n(x)$')
+        plt.plot(_X.ravel(), _Y, 'ro', label=u'Observed Clicks')
+        plt.plot(_x_pred, _y_pred, 'b-', label=u'Predicted Clicks')
+        plt.fill(np.concatenate([_x_pred, _x_pred[::-1]]),
+                 np.concatenate([_y_pred - 1.96 * _sigma, (_y_pred + 1.96 * _sigma)[::-1]]),
+                 alpha=.5, fc='b', ec='None', label='95% conf interval')
+        plt.xlabel('$x$')
+        plt.ylabel('$n(x)$')
+        plt.legend(loc='lower right')
+        plt.show()
+
 
     def plot_clicks_functions(self):
         bids = np.linspace(0, 100, 100)
@@ -112,3 +168,7 @@ class Environment:
         plt.title('Conversion Probability as Price Varies')
         plt.legend()
         plt.show()
+
+
+env = Environment()
+env.clicks_learning("C1")
