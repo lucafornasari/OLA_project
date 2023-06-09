@@ -11,7 +11,7 @@ class Environment:
     def __init__(self):
         self.users = []
         self.prices = [150, 175, 190, 210, 225]
-        self.margin = 0.4
+        self.prod_cost = 80
         self.bids = np.linspace(0.0, 1.0, 100)
 
     def generate_users(self, num_users):
@@ -71,8 +71,6 @@ class Environment:
     def purchase_decision(self, price, _user_class):
         probability = self.get_conversion_prob(price, _user_class)
         return np.random.binomial(1, probability)  # Bernoulli distribution
-
-
 
     def generate_observations(x, _user_class, noise_std):
         return n(x) + np.random.normal(0, noise_std, size=n(x).shape)
@@ -170,5 +168,5 @@ class Environment:
         plt.show()
 
 
-env = Environment()
-env.clicks_learning("C1")
+#env = Environment()
+#env.clicks_learning("C1")
