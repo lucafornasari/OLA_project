@@ -60,7 +60,19 @@ class Environment:
         # Define the function for conversion probability for a specific class
         # Return the conversion probability based on the price and user class
         if _user_class == "C1":
-            return 1 / (1 + np.exp(-0.1 * price + 1))
+            prob = None
+            if price == self.prices[0]:
+                prob = 0.15
+            elif price == self.prices[1]:
+                prob = 0.25
+            elif price == self.prices[2]:
+                prob = 0.35
+            elif price == self.prices[3]:
+                prob = 0.1
+            elif price == self.prices[4]:
+                prob = 0.05
+            return prob
+            # return 1 / (1 + np.exp(-0.1 * price + 1))
         elif _user_class == "C2":
             return 1 / (1 + np.exp(-0.05 * price + 0.5))
         elif _user_class == "C3":
@@ -73,7 +85,7 @@ class Environment:
         return np.random.binomial(1, probability)  # Bernoulli distribution
 
     def generate_observations(x, _user_class, noise_std):
-        return n(x) + np.random.normal(0, noise_std, size=n(x).shape)
+        return None  # n(x) + np.random.normal(0, noise_std, size=n(x).shape)
 
     def clicks_learning(self, _user_class):
         n_obs = 365
