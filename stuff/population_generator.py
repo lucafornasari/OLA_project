@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from Settings import Settings
 import json
 import pandas as pd
 
