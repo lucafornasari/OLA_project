@@ -93,7 +93,7 @@ class Environment:
             theta = 1.0
             l = 1.0
             kernel = C(theta, (1e-3, 1e3)) * RBF(l, (1e-3, 1e3))
-            gp = GaussianProcessRegressor(kernel=kernel, alpha=noise_std, normalize_y=True,
+            gp = GaussianProcessRegressor(kernel=kernel, alpha=noise_std ** 2, normalize_y=True,
                                           n_restarts_optimizer=10)  # alpha=noise_std**2
 
             gp.fit(X, Y)
