@@ -22,19 +22,19 @@ class Environment:
             user = Customer(f1, f2)
             self.users.append(user)
 
-    def get_clicks(self, bid, _user_class, min_bid = 10):
+    def get_clicks(self, bid, _user_class, min_bid=10):
         # Define the function for number of clicks for a specific class
         # Return the number of clicks based on the bid and user class
-        configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise" : 1.0},
-                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise" : 2.0},
-                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise" : 4}}
+        configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
+                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 2.0},
+                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 4}}
         max_clicks = configs[_user_class]["max_clicks"]
         steepness = configs[_user_class]["steepness"]
         noise = configs[_user_class]["noise"]
 
         if bid < min_bid:
             return 0
-        ret_val =   max_clicks * (1 - np.exp(-steepness * (bid - min_bid)))
+        ret_val = max_clicks * (1 - np.exp(-steepness * (bid - min_bid)))
 
         return ret_val + np.random.normal(0, noise)
 
