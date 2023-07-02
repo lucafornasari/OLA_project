@@ -22,25 +22,39 @@ class Environment:
             user = Customer(f1, f2)
             self.users.append(user)
 
-    def get_clicks(self, bid, _user_class, min_bid=10):
+    def get_clicks(self, bid, _user_class):
         # Define the function for number of clicks for a specific class
         # Return the number of clicks based on the bid and user class
-        configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
-                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 2.0},
-                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 4}}
-        max_clicks = configs[_user_class]["max_clicks"]
-        steepness = configs[_user_class]["steepness"]
-        noise = configs[_user_class]["noise"]
+        if _user_class == "C1":
+            _clicks = (1.0 - np.exp(-5.0*bid)) * 100
+            sigma = 5.0
+        elif _user_class == "C2":
+            _clicks = 0.5 * bid + 5
+            sigma = 2
+        elif _user_class == "C3":
+            _clicks = 0.3 * bid + 2
+            sigma = 3
+        else:
+            return None  # Handle the case if features do not match any class
 
-        if bid < min_bid:
-            return 0
-        ret_val = max_clicks * (1 - np.exp(-steepness * (bid - min_bid)))
+        return _clicks + np.random.normal(0, sigma)
 
-        return ret_val + np.random.normal(0, noise)
+    def get_costs(self, bid, _user_class):
+        # Define the function for cumulative cost for a specific class
+        # Return the cumulative cost based on the bid and user class
+        if _user_class == "C1":
+            costs = 0.005 * bid**2 + 0.2 * bid + 10
+            sigma = 1
+        elif _user_class == "C2":
+            costs = 0.002 * bid**2 + 0.1 * bid + 5
+            sigma = 2
+        elif _user_class == "C3":
+            costs = 0.001 * bid**2 + 0.05 * bid + 2
+            sigma = 3
+        else:
+            return None  # Handle the case if features do not match any class
 
-    def get_costs(self, bid, _user_class, scale_factor = 1):
-        return bid * scale_factor * self.get_clicks(bid, _user_class)
-        
+        return max(0, costs + np.random.normal(0, sigma))
 
     def get_conversion_prob(self, price, _user_class):
         # Define the function for conversion probability for a specific class
@@ -93,7 +107,7 @@ class Environment:
             theta = 1.0
             l = 1.0
             kernel = C(theta, (1e-3, 1e3)) * RBF(l, (1e-3, 1e3))
-            gp = GaussianProcessRegressor(kernel=kernel, alpha=noise_std ** 2, normalize_y=True,
+            gp = GaussianProcessRegressor(kernel=kernel, alpha=noise_std, normalize_y=True,
                                           n_restarts_optimizer=10)  # alpha=noise_std**2
 
             gp.fit(X, Y)
