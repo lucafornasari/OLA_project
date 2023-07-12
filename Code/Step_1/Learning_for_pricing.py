@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
+from Code.ClairvoyantAlg import optimize
 from Code.Environment.Environment import Environment
 from Code.Step_1.TS_Learner import TS_Learner
 from Code.Step_1.UCB1_Learner import UCB1_Learner
@@ -7,12 +9,18 @@ from Code.Step_1.UCB1_Learner import UCB1_Learner
 env = Environment()
 customer_class = "C1"
 
-T = 20000
+T = 365
 
-opt_price = env.prices[2]
-opt = opt_price * env.get_conversion_prob(opt_price, customer_class)
+opt_bids, opt_prices = optimize(env)
+opt_bid = opt_bids[customer_class]
+opt_price = opt_prices[customer_class]
 
-n_experiments = 500
+_margin = opt_price - env.prod_cost
+clicks = env.get_clicks(opt_bid, customer_class)
+costs = env.get_costs(opt_bid, customer_class)
+opt = clicks * env.get_conversion_prob(opt_price, customer_class) * _margin - costs
+
+n_experiments = 100
 ts_rewards_per_experiment = []
 ucb_rewards_per_experiment = []
 ts_regrets_per_experiment = []
@@ -20,8 +28,8 @@ ucb_regrets_per_experiment = []
 
 for e in range(0, n_experiments):
     print("Starting new experiment...")
-    ts_learner = TS_Learner(env.prices)
-    ucb_learner = UCB1_Learner(env.prices)
+    ts_learner = TS_Learner(env.prices, env.prod_cost, clicks, costs)
+    ucb_learner = UCB1_Learner(env.prices, env.prod_cost, clicks, costs)
 
     ts_regrets = []
     ucb_regrets = []
@@ -31,13 +39,17 @@ for e in range(0, n_experiments):
         pulled_arm = ts_learner.pull_arms()
         purchase = env.purchase_decision(env.prices[pulled_arm], customer_class)
         ts_learner.update(pulled_arm, purchase)
-        ts_regrets.append(opt - (pulled_arm * purchase))
+        _margin = env.prices[pulled_arm] - env.prod_cost
+        _reward = clicks * _margin * env.get_conversion_prob(env.prices[pulled_arm], customer_class) - costs
+        ts_regrets.append(opt - _reward)
 
         # UCB1 Learner
         pulled_arm = ucb_learner.pull_arms()
         purchase = env.purchase_decision(env.prices[pulled_arm], customer_class)
         ucb_learner.update(pulled_arm, purchase)
-        ucb_regrets.append(opt - (pulled_arm * purchase))
+        _margin = env.prices[pulled_arm] - env.prod_cost
+        _reward = clicks * _margin * env.get_conversion_prob(env.prices[pulled_arm], customer_class) - costs
+        ucb_regrets.append(opt - _reward)
 
     ts_rewards_per_experiment.append(ts_learner.collected_rewards.tolist())
     ucb_rewards_per_experiment.append(ucb_learner.collected_rewards.tolist())

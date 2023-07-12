@@ -41,6 +41,7 @@ def optimize(_env):
             reward_1 = _clicks * _conv * _margin - _cost
             if reward_1 > reward:
                 opt_bids[c] = b
+                reward = reward_1
 
     print(opt_prices)
     print(opt_bids)

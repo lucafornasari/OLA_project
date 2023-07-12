@@ -12,7 +12,7 @@ class Environment:
         self.users = []
         self.prices = [150, 175, 190, 210, 225]
         self.prod_cost = 80
-        self.bids = np.linspace(0.0, 1.0, 100)
+        self.bids = np.linspace(0.0, 100, 101)
 
     def generate_users(self, num_users):
         # Generate a list of random users with random features
