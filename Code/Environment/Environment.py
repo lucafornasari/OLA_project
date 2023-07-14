@@ -36,10 +36,28 @@ class Environment:
             return 0
         ret_val = max_clicks * (1 - np.exp(-steepness * (bid - min_bid)))
 
-        return ret_val + np.random.normal(0, noise)
+        return ret_val
+
+    def sample_clicks(self, bid, _user_class, min_bid=10):
+        configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
+                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 2.0},
+                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 4}}
+        max_clicks = configs[_user_class]["max_clicks"]
+        steepness = configs[_user_class]["steepness"]
+        noise = configs[_user_class]["noise"]
+        return self.get_clicks(bid, _user_class)+np.random.normal(0, noise)
 
     def get_costs(self, bid, _user_class, scale_factor = 1):
         return bid * scale_factor * self.get_clicks(bid, _user_class)
+
+    def sample_costs(self, bid, _user_class,scale_factor =1 ):
+        configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
+                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 2.0},
+                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 4}}
+        max_clicks = configs[_user_class]["max_clicks"]
+        steepness = configs[_user_class]["steepness"]
+        noise = configs[_user_class]["noise"]
+        return self.get_costs(bid, _user_class)+np.random.normal(0, noise)
         
 
     def get_conversion_prob(self, price, _user_class):
@@ -69,6 +87,11 @@ class Environment:
     def purchase_decision(self, price, _user_class):
         probability = self.get_conversion_prob(price, _user_class)
         return np.random.binomial(1, probability)  # Bernoulli distribution
+
+    def round(self, _user_class, pulled_arm, optimal_bid):
+        result = np.random.binomial(1, self.get_conversion_prob(self.prices[pulled_arm], _user_class), np.round(self.get_clicks(optimal_bid, _user_class)).astype(int))
+        reward = np.sum(result) * (self.prices[pulled_arm] - self.prod_cost) - self.get_costs(optimal_bid, _user_class)
+        return np.sum(result), self.get_clicks(optimal_bid, _user_class) - np.sum(result), reward
 
     def generate_observations(x, _user_class, noise_std):
         return None  # n(x) + np.random.normal(0, noise_std, size=n(x).shape)

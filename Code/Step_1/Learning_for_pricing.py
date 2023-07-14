@@ -9,7 +9,7 @@ from Code.Step_1.UCB1_Learner import UCB1_Learner
 env = Environment()
 customer_class = "C1"
 
-T = 365
+T = 250
 
 opt_bids, opt_prices = optimize(env)
 opt_bid = opt_bids[customer_class]
@@ -20,7 +20,7 @@ clicks = env.get_clicks(opt_bid, customer_class)
 costs = env.get_costs(opt_bid, customer_class)
 opt = clicks * env.get_conversion_prob(opt_price, customer_class) * _margin - costs
 
-n_experiments = 100
+n_experiments = 10
 ts_rewards_per_experiment = []
 ucb_rewards_per_experiment = []
 ts_regrets_per_experiment = []
@@ -28,8 +28,8 @@ ucb_regrets_per_experiment = []
 
 for e in range(0, n_experiments):
     print("Starting new experiment...")
-    ts_learner = TS_Learner(env.prices, env.prod_cost, clicks, costs)
-    ucb_learner = UCB1_Learner(env.prices, env.prod_cost, clicks, costs)
+    ts_learner = TS_Learner(env.prices)
+    ucb_learner = UCB1_Learner(env.prices)
 
     ts_regrets = []
     ucb_regrets = []
@@ -37,19 +37,19 @@ for e in range(0, n_experiments):
     for t in range(0, T):
         # Thompson Sampling Learner
         pulled_arm = ts_learner.pull_arms()
-        purchase = env.purchase_decision(env.prices[pulled_arm], customer_class)
-        ts_learner.update(pulled_arm, purchase)
-        _margin = env.prices[pulled_arm] - env.prod_cost
-        _reward = clicks * _margin * env.get_conversion_prob(env.prices[pulled_arm], customer_class) - costs
-        ts_regrets.append(opt - _reward)
+        _reward = env.round(customer_class, pulled_arm, opt_bid)
+        # _margin = env.prices[pulled_arm] - env.prod_cost
+        # _reward = clicks * _margin * env.purchase_decision(env.prices[pulled_arm], customer_class) - costs
+        ts_learner.update(pulled_arm, _reward)
+        ts_regrets.append(opt - _reward[2])
 
         # UCB1 Learner
         pulled_arm = ucb_learner.pull_arms()
-        purchase = env.purchase_decision(env.prices[pulled_arm], customer_class)
-        ucb_learner.update(pulled_arm, purchase)
-        _margin = env.prices[pulled_arm] - env.prod_cost
-        _reward = clicks * _margin * env.get_conversion_prob(env.prices[pulled_arm], customer_class) - costs
-        ucb_regrets.append(opt - _reward)
+        _reward = env.round(customer_class, pulled_arm, opt_bid)
+        # _margin = env.prices[pulled_arm] - env.prod_cost
+        # _reward = clicks * _margin * env.purchase_decision(env.prices[pulled_arm], customer_class) - costs
+        ucb_learner.update(pulled_arm, _reward)
+        ucb_regrets.append(opt - _reward[2])
 
     ts_rewards_per_experiment.append(ts_learner.collected_rewards.tolist())
     ucb_rewards_per_experiment.append(ucb_learner.collected_rewards.tolist())
