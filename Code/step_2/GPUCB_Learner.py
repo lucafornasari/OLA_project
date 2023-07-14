@@ -15,7 +15,7 @@ class GPUCB_Learner(Learner):
         self.pulls = np.zeros(self.n_arms)
         self.alpha = 10.0
         self.kernel = C(1.0, (1e-4, 1e4)) * RBF(1.0, (1e-4, 1e4))
-        self.gp = GaussianProcessRegressor(kernel=self.kernel, alpha=self.alpha**2, n_restarts_optimizer=9)
+        self.gp = GaussianProcessRegressor(kernel=self.kernel, alpha=self.alpha**2, n_restarts_optimizer=9, normalize_y = True)
 
     def update_observations(self, arm_idx, reward):
         super().update_observations(arm_idx, reward)

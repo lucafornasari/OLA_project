@@ -9,7 +9,7 @@ from Code.Step_1.UCB1_Learner import UCB1_Learner
 env = Environment()
 customer_class = "C1"
 
-T = 250
+T = 365
 
 opt_bids, opt_prices = optimize(env)
 opt_bid = opt_bids[customer_class]
@@ -20,7 +20,7 @@ clicks = env.get_clicks(opt_bid, customer_class)
 costs = env.get_costs(opt_bid, customer_class)
 opt = clicks * env.get_conversion_prob(opt_price, customer_class) * _margin - costs
 
-n_experiments = 10
+n_experiments = 100
 ts_rewards_per_experiment = []
 ucb_rewards_per_experiment = []
 ts_regrets_per_experiment = []

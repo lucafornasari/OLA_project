@@ -47,8 +47,19 @@ class Environment:
         noise = configs[_user_class]["noise"]
         return self.get_clicks(bid, _user_class)+np.random.normal(0, noise)
 
-    def get_costs(self, bid, _user_class, scale_factor = 1):
-        return bid * scale_factor * self.get_clicks(bid, _user_class)
+    def get_costs(self, bid, _user_class, scale_factor = 1, min_bid=10):
+        configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
+                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 2.0},
+                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 4}}
+        max_clicks = configs[_user_class]["max_clicks"]
+        steepness = configs[_user_class]["steepness"]
+
+        if bid < min_bid:
+            return 0
+        ret_val = max_clicks * (1 - np.exp(-steepness * (bid - min_bid)))*2
+
+        return ret_val
+        # return bid * scale_factor * self.get_clicks(bid, _user_class)
 
     def sample_costs(self, bid, _user_class,scale_factor =1 ):
         configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
