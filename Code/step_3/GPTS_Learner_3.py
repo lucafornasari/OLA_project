@@ -1,9 +1,9 @@
-from Learner import *
-from Environment import Environment
+from Code.step_2.Learner import *
+from Code.Environment.Environment import Environment
 import numpy as np
 import math
-from GPTS_Learner import GPTS_Learner
-from TS_Learner import TS_Learner
+from Code.step_2.GPTS_Learner import GPTS_Learner
+from Code.Step_1.TS_Learner import TS_Learner
 
 
 class GPTS_Learner_3(Learner):

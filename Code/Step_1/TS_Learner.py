@@ -1,4 +1,4 @@
-from Learner import *
+from Code.Step_1.Learner import *
 
 
 class TS_Learner(Learner):

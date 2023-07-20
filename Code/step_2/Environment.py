@@ -183,6 +183,12 @@ class Environment:
         plt.legend()
         plt.show()
 
+    def part3_round(self, _user_class, pulled_arm, optimal_bid):
+        clicks=max(0,self.sample_clicks(optimal_bid, _user_class))
+        result = np.random.binomial(1, self.get_conversion_prob(self.prices[pulled_arm], _user_class), np.round(clicks).astype(int))
+        reward = np.sum(result) * (self.prices[pulled_arm] - self.prod_cost) - self.sample_costs(optimal_bid, _user_class)
+        return np.sum(result), clicks - np.sum(result), reward
+
 
 #env = Environment()
 #env.clicks_learning("C1")

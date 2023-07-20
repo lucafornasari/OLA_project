@@ -1,9 +1,9 @@
-from Learner import *
-from Environment import Environment
+from Code.step_2.Learner import *
+from Code.Environment.Environment import Environment
 import numpy as np
 import math
-from GPUCB1_Learner import GPUCB1_Learner
-from TS_Learner import TS_Learner
+from Code.step_2.GPUCB1_Learner import GPUCB1_Learner
+from Code.Step_1.TS_Learner import TS_Learner
 
 
 class GPUCB1_Learner_3(Learner):

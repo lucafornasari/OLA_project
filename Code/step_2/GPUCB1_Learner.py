@@ -1,5 +1,5 @@
-from Learner import *
-from Environment import Environment
+from Code.step_2.Learner import *
+from Code.Environment.Environment import Environment
 import numpy as np
 import math
 from sklearn.gaussian_process import GaussianProcessRegressor

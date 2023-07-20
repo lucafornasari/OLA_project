@@ -1,6 +1,6 @@
 import numpy as np
 import random
-from Environment import Environment
+from Code.Environment.Environment import Environment
 
 
 def optimize(_env):

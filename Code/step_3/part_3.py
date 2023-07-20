@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from Environment import Environment
-from GPTS_Learner import GPTS_Learner
+from Code.Environment.Environment import Environment
+from Code.step_3.GPTS_Learner_3 import GPTS_Learner_3
 from GPUCB1_Learner_3 import GPUCB1_Learner_3
-from Clairvoyant import*
+from Code.step_2.Clairvoyant import *
 
 env = Environment()
 customer_class = "C1"
@@ -24,7 +24,7 @@ gpucb_regregpts_per_experiment = []
 
 for e in range(0, n_experimengpts):
     print("Starting new experiment...")
-    gpts_learner = GPTS_Learner(env.bids)
+    gpts_learner = GPTS_Learner_3(env.bids, env.prices)
     gpucb_learner = GPUCB1_Learner_3(env.bids,env.prices)
 
     gpts_regregpts = []
@@ -33,14 +33,11 @@ for e in range(0, n_experimengpts):
     for t in range(0, T):
         
         # Thompson Sampling Learner
-        pulled_arm = gpts_learner.pull_arm()
-        clicks = max(0,env.sample_clicks(env.bids[pulled_arm], customer_class))
-        conv = env.get_conversion_prob(opt_price, customer_class)
-        cost = max(0,env.sample_costs(env.bids[pulled_arm], customer_class))
-        reward = clicks * conv * margin - cost
-        gpts_learner.update(pulled_arm, reward)
-        gpts_regregpts.append(opt - reward)
-        print(opt-reward)
+        pulled_arm_bid, pulled_arm_price = gpts_learner.pull_arm()
+        reward = env .part3_round(customer_class, pulled_arm_price, pulled_arm_bid)
+        gpts_learner.update(pulled_arm_price,pulled_arm_bid, reward)
+        #print(gpucb_learner.pulled_arms)
+        gpts_regregpts.append(opt - reward[2])
        
         # gpucb1 Learner
         pulled_arm_bid, pulled_arm_price = gpucb_learner.pull_arm()
@@ -49,7 +46,7 @@ for e in range(0, n_experimengpts):
         #print(gpucb_learner.pulled_arms)
         gpucb_regregpts.append(opt - reward[2])
 
-    gpts_rewards_per_experiment.append(gpts_learner.collected_rewards.tolist())
+    gpts_rewards_per_experiment.append(gpts_learner.bid.collected_rewards.tolist())
     gpucb_rewards_per_experiment.append(gpucb_learner.bid.collected_rewards.tolist())
     gpts_regregpts_per_experiment.append(gpts_regregpts)
     gpucb_regregpts_per_experiment.append(gpucb_regregpts)
