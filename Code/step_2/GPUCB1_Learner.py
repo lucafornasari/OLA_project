@@ -1,5 +1,5 @@
-from Code.step_2.Learner import *
-from Code.Environment.Environment import Environment
+from Learner import *
+from Environment import Environment
 import numpy as np
 import math
 from sklearn.gaussian_process import GaussianProcessRegressor
@@ -13,10 +13,11 @@ class GPUCB1_Learner(Learner):
         self.sigmas = np.ones(self.n_arms) * 10
         self.pulled_arms = []
         self.pulls = np.zeros(self.n_arms)
-        self.alpha = 10.0
-        self.kernel = C(1, (1e-3, 1e3)) * RBF(0.1, (1e-3, 1e3)) #
-        self.gp = GaussianProcessRegressor(kernel=self.kernel, alpha=self.alpha**2, n_restarts_optimizer=9)
-        self.interval = 10
+        self.alpha = 5.0
+        self.kernel = C(1, (1e-9, 1e9)) * RBF(0.1, (1e-10, 1e3)) #
+        self.gp = GaussianProcessRegressor(kernel=self.kernel, alpha=self.alpha**2, n_restarts_optimizer=20)
+        self.gp._max_iter = 10000
+        self.interval = 1
         self.sigma_modifier = 1
 
     def update_observations(self, pulled_arm, decision):
