@@ -12,8 +12,9 @@ class GPTS_Learner(Learner):
         self.sigmas=np.ones(self.n_arms)*10
         self.pulled_arms = []
         alpha= 10.0
-        kernel=  C(1.0,(1e-3,1e3)) *RBF(1.0, (1e-3,1e3)) 
+        kernel=  C(1.0,(1e-3,1e3)) *RBF(0.7, (1e-3,1e3))
         self.gp=GaussianProcessRegressor(kernel=kernel,alpha=alpha**2, n_restarts_optimizer=9)
+        self.interval = 10
 
 
     def update_observations(self,arm_idx, reward):
@@ -24,9 +25,10 @@ class GPTS_Learner(Learner):
     def update_model(self):
       x= np.atleast_2d(self.pulled_arms).T
       y= self.collected_rewards
-      self.gp.fit(x,y)
-      self.means, self.sigmas= self.gp.predict(np.atleast_2d(self.arms).T, return_std= True)
-      self.sigmas = np.maximum(self.sigmas, 1e-2)
+      if self.t % self.interval == 0:
+          self.gp.fit(x,y)
+          self.means, self.sigmas= self.gp.predict(np.atleast_2d(self.arms).T, return_std= True)
+          self.sigmas = np.maximum(self.sigmas, 1e-2)
 
     
     def update(self,pulled_arms, reward):

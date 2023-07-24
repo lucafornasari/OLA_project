@@ -25,7 +25,7 @@ class Environment:
     def get_clicks(self, bid, _user_class, min_bid=10):
         # Define the function for number of clicks for a specific class
         # Return the number of clicks based on the bid and user class
-        configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
+        configs = {"C1": {"max_clicks": 40, "steepness": 0.07, "noise": 1.0},
                    "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 2.0},
                    "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 4}}
         max_clicks = configs[_user_class]["max_clicks"]
