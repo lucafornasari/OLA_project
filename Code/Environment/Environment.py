@@ -13,6 +13,7 @@ class Environment:
         self.prices = [150, 175, 190, 210, 225]
         self.prod_cost = 80
         self.bids = np.linspace(0.0, 100, 101)
+        self.classes = ["C1", "C2", "C3"]
 
     def generate_users(self, num_users):
         # Generate a list of random users with random features
@@ -26,8 +27,8 @@ class Environment:
         # Define the function for number of clicks for a specific class
         # Return the number of clicks based on the bid and user class
         configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
-                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 2.0},
-                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 4}}
+                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 1.0},
+                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 1.0}}
         max_clicks = configs[_user_class]["max_clicks"]
         steepness = configs[_user_class]["steepness"]
         noise = configs[_user_class]["noise"]
@@ -40,8 +41,8 @@ class Environment:
 
     def sample_clicks(self, bid, _user_class, min_bid=10):
         configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
-                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 2.0},
-                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 4}}
+                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 1.0},
+                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 1.0}}
         max_clicks = configs[_user_class]["max_clicks"]
         steepness = configs[_user_class]["steepness"]
         noise = configs[_user_class]["noise"]
@@ -49,8 +50,8 @@ class Environment:
 
     def get_costs(self, bid, _user_class, scale_factor = 1, min_bid=10):
         configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
-                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 2.0},
-                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 4}}
+                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 1.0},
+                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 1.0}}
         max_clicks = configs[_user_class]["max_clicks"]
         steepness = configs[_user_class]["steepness"]
 
@@ -63,8 +64,8 @@ class Environment:
 
     def sample_costs(self, bid, _user_class,scale_factor =1 ):
         configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
-                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 2.0},
-                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 4}}
+                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 1.0},
+                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 1.0}}
         max_clicks = configs[_user_class]["max_clicks"]
         steepness = configs[_user_class]["steepness"]
         noise = configs[_user_class]["noise"]
@@ -79,19 +80,40 @@ class Environment:
             if price == self.prices[0]:
                 prob = 0.15
             elif price == self.prices[1]:
-                prob = 0.25
-            elif price == self.prices[2]:
                 prob = 0.35
+            elif price == self.prices[2]:
+                prob = 0.2
             elif price == self.prices[3]:
                 prob = 0.1
             elif price == self.prices[4]:
                 prob = 0.05
             return prob
-            # return 1 / (1 + np.exp(-0.1 * price + 1))
         elif _user_class == "C2":
-            return 1 / (1 + np.exp(-0.05 * price + 0.5))
+            prob = None
+            if price == self.prices[0]:
+                prob = 0.15
+            elif price == self.prices[1]:
+                prob = 0.2
+            elif price == self.prices[2]:
+                prob = 0.35
+            elif price == self.prices[3]:
+                prob = 0.15
+            elif price == self.prices[4]:
+                prob = 0.05
+            return prob
         elif _user_class == "C3":
-            return 1 / (1 + np.exp(-0.2 * price + 2))
+            prob = None
+            if price == self.prices[0]:
+                prob = 0.05
+            elif price == self.prices[1]:
+                prob = 0.1
+            elif price == self.prices[2]:
+                prob = 0.2
+            elif price == self.prices[3]:
+                prob = 0.30
+            elif price == self.prices[4]:
+                prob = 0.05
+            return prob
         else:
             return None  # Handle the case if features do not match any class
 
