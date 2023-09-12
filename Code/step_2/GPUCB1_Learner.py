@@ -12,9 +12,9 @@ class GPUCB1_Learner(Learner):
         self.sigmas = np.ones(self.n_arms) * 10
         self.pulled_arms = []
         self.pulls = np.zeros(self.n_arms)
-        self.alpha = 10.0
-        self.kernel = C(1.0, (1e-3, 1e3)) * RBF(1.0, (1e-3, 1e3)) #
-        self.gp = GaussianProcessRegressor(kernel=self.kernel, alpha=self.alpha**2, n_restarts_optimizer=9)
+        self.alpha = 1.0
+        self.kernel = RBF(1.0, (1e-3, 1e3)) #C(1e1, (1e-7, 1e7)) *
+        self.gp = GaussianProcessRegressor(kernel=self.kernel, alpha=self.alpha**2, n_restarts_optimizer = 9, normalize_y = True)
 
     def update_observations(self, pulled_arm, decision):
         super().update_observations(pulled_arm, decision)

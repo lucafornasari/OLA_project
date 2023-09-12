@@ -9,7 +9,7 @@ from Clairvoyant import*
 env = Environment()
 customer_class = "C1"
 
-T = 250
+T = 150
 opt_prices, opt_bids =optimize(env)
 opt_price=opt_prices["C1"]
 margin = opt_price - env.prod_cost

@@ -23,6 +23,16 @@ class Environment:
             user = Customer(f1, f2)
             self.users.append(user)
 
+    def get_class_from_features(self, f1, f2):
+        if f1 == 0 and f2 == 0:
+            return "C1"
+        elif f1 == 0 and f2 == 1:
+            return "C2"
+        elif f1 == 1:
+            return "C3"
+        else:
+            return None
+
     def get_clicks(self, bid, _user_class, min_bid=10):
         # Define the function for number of clicks for a specific class
         # Return the number of clicks based on the bid and user class
@@ -221,12 +231,36 @@ class Environment:
         plt.legend()
         plt.show()
 
-    def part3_round(self, _user_class, pulled_arm, optimal_bid):
-        clicks=max(0,self.sample_clicks(optimal_bid, _user_class))
+    def part3_round(self, _user_class, pulled_arm, pulled_bid):
+        clicks=max(0, self.sample_clicks(pulled_bid, _user_class))
         result = np.random.binomial(1, self.get_conversion_prob(self.prices[pulled_arm], _user_class), np.round(clicks).astype(int))
-        reward = np.sum(result) * (self.prices[pulled_arm] - self.prod_cost) - self.sample_costs(optimal_bid, _user_class)
+        reward = np.sum(result) * (self.prices[pulled_arm] - self.prod_cost) - self.sample_costs(pulled_bid, _user_class)
         return np.sum(result), clicks - np.sum(result), reward
 
+    def part4_round(self, context_classes, pulled_arm, pulled_bid):
+        d = {'f_1': [], 'f_2': [], 'pos_conv': [], 'n_clicks': [], 'costs': [], 'price': [], 'bid': []}
+        tot_result=0
+        tot_clicks=0
+        tot_reward=0
+        for c in context_classes:
+            d['f_1'].append(c[0])
+            d['f_2'].append(c[1])
+            d['price'].append(self.prices[pulled_arm])
+            d['bid'].append(pulled_bid)
+            user_class = self.get_class_from_features(int(c[0]),int(c[1]))
+            clicks = max(0, self.sample_clicks(pulled_bid, user_class))
+            d['n_clicks'].append(clicks)
+            result = np.sum(np.random.binomial(1, self.get_conversion_prob(self.prices[pulled_arm], user_class),
+                                        np.round(clicks).astype(int)))
+            d['pos_conv'].append(result)
+            costs = self.sample_costs(pulled_bid, user_class)
+            reward = result * (self.prices[pulled_arm] - self.prod_cost) - costs
+            d['costs'].append(costs)
+            tot_result += result
+            tot_clicks += clicks
+            tot_reward += reward
+
+        return tot_result, tot_clicks - tot_result, tot_reward, d
 
 #env = Environment()
 #env.clicks_learning("C1")
