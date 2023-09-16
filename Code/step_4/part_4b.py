@@ -8,14 +8,14 @@ from Code.step_4.ContextHandler import ContextHandler
 
 env = Environment()
 
-T = 250
+T = 100
 opt_prices, opt_bids = optimize(env)
 opt = [env.get_clicks(opt_bids[customer_class], customer_class) * env.get_conversion_prob(opt_prices[customer_class],customer_class) * (opt_prices[customer_class] - env.prod_cost) - env.get_costs(opt_bids[customer_class], customer_class) for customer_class in env.classes]
 opt_sum = sum(opt)
 
 c_handler = ContextHandler()
 
-n_experiments = 3
+n_experiments = 1
 gpts_rewards_per_experiment = []
 gpucb_rewards_per_experiment = []
 gpts_regrets_per_experiment = []
@@ -30,15 +30,12 @@ for e in range(0, n_experiments):
     for t in range(0, T):
 
         # if t % 14 == 0 and t != 0:
-        #     contexts = []
-        #     print(context_generator.select_context())
-        #     for i in context_generator.select_context():
-        #         contexts.append(contexts_tot[i])
+        #     c_handler.change_context()
 
         for i in range(len(c_handler.context_ts)):
             # Thompson Sampling Learner
             pulled_arm_bid, pulled_arm_price = c_handler.context_ts[i].pull_arm()
-            reward = env.part4_round(c_handler.context_classes_ts[i], pulled_arm_price, pulled_arm_bid)
+            reward = env.part4_round(c_handler.context_classes_ts[i], pulled_arm_price, pulled_arm_bid, t)
             c_handler.update_dataset_ts(reward[3])
             c_handler.context_ts[i].update(pulled_arm_price, pulled_arm_bid, reward)
             #gpts_regrets[class_id] = np.append(gpts_regrets[class_id], opt[class_id] - reward[2])
@@ -46,7 +43,7 @@ for e in range(0, n_experiments):
         for i in range(len(c_handler.context_ucb)):
             # gpucb1 Learner
             pulled_arm_bid, pulled_arm_price = c_handler.context_ucb[i].pull_arm()
-            reward = env.part4_round(c_handler.context_classes_ucb[i], pulled_arm_price, pulled_arm_bid)
+            reward = env.part4_round(c_handler.context_classes_ucb[i], pulled_arm_price, pulled_arm_bid, t)
             c_handler.update_dataset_ucb(reward[3])
             c_handler.context_ucb[i].update(pulled_arm_price, pulled_arm_bid, reward)
             #gpucb_regrets[class_id] = np.append(gpucb_regrets[class_id], opt[class_id] - reward[2])

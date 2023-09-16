@@ -15,9 +15,10 @@ class ContextHandler:
         self.context_ucb = [GPUCB1_Learner_3(env.bids, env.prices)]
         self.context_classes_ts = [["00", "01", "10", "11"]]
         self.context_classes_ucb = [["00", "01", "10", "11"]]
-        d = {'f_1': [], 'f_2': [], 'pos_conv': [], 'n_clicks': [], 'costs': [], 'price': [], 'bid': []}
+        d = {'f_1': [], 'f_2': [], 'pos_conv': [], 'n_clicks': [], 'costs': [], 'price': [], 'bid': [], 't': []}
         self.dataset_ts = pd.DataFrame(data=d)
         self.dataset_ucb = pd.DataFrame(data=d)
+        self.featuresToSplit = [0, 1]
 
     def update_dataset_ts(self, d):
         ds = pd.DataFrame(data=d)
@@ -26,3 +27,10 @@ class ContextHandler:
     def update_dataset_ucb(self, d):
         ds = pd.DataFrame(data=d)
         self.dataset_ucb = pd.concat([self.dataset_ucb, ds], ignore_index=True)
+
+    def change_context(self):
+        NCb= 0
+        value_before_split = 1/NCb*(CRp*NCb*(p-cost)-COb)
+        for f in featuresToSplit:
+            #Evaluate the value after the split for each new cntext
+

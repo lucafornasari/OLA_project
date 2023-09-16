@@ -237,8 +237,8 @@ class Environment:
         reward = np.sum(result) * (self.prices[pulled_arm] - self.prod_cost) - self.sample_costs(pulled_bid, _user_class)
         return np.sum(result), clicks - np.sum(result), reward
 
-    def part4_round(self, context_classes, pulled_arm, pulled_bid):
-        d = {'f_1': [], 'f_2': [], 'pos_conv': [], 'n_clicks': [], 'costs': [], 'price': [], 'bid': []}
+    def part4_round(self, context_classes, pulled_arm, pulled_bid, t):
+        d = {'f_1': [], 'f_2': [], 'pos_conv': [], 'n_clicks': [], 'costs': [], 'price': [], 'bid': [], 't': []}
         tot_result=0
         tot_clicks=0
         tot_reward=0
@@ -259,6 +259,7 @@ class Environment:
             tot_result += result
             tot_clicks += clicks
             tot_reward += reward
+            d['t'].append(t)
 
         return tot_result, tot_clicks - tot_result, tot_reward, d
 
