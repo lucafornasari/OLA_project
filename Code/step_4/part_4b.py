@@ -29,8 +29,8 @@ for e in range(0, n_experiments):
 
     for t in range(0, T):
 
-        # if t % 14 == 0 and t != 0:
-        #     c_handler.change_context()
+        if t % 14 == 0 and t != 0:
+            c_handler.generate_context()
 
         for i in range(len(c_handler.context_ts)):
             # Thompson Sampling Learner
