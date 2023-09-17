@@ -35,14 +35,18 @@ class ContextHandler:
             df = self.dataset_ts.copy()
         elif learner == "UCB":
             df = self.dataset_ucb.copy()
-        else:
-            df = None
 
         df['reward'] = df['pos_conv'] * (df['price'] - env.prod_cost) - df['costs']
 
+        self.generated_contexts = []
         self.generated_contexts.append(df)
         self.gen_context(df, ['f_1', 'f_2'])
-        self.extract_classes_from_df()
+
+        if learner == "TS":
+            self.context_classes_ts = self.extract_classes_from_df()
+        elif learner == "UCB":
+            self.context_classes_ucb = self.extract_classes_from_df()
+        print()
 
         # retrainare i learner
 
@@ -56,24 +60,26 @@ class ContextHandler:
                 temp.append(str(row['f_1']) + str(row['f_2']))
             temp_classes.append(list(set(temp)))
 
+        return temp_classes
+
     def get_split_value(self, df, splitting_feature):
-        df_c1 = df.loc[df[splitting_feature] == 0]
-        df_c2 = df.loc[df[splitting_feature] == 1]
+        df_c1 = df.loc[df[splitting_feature].astype(int) == 0]
+        df_c2 = df.loc[df[splitting_feature].astype(int) == 1]
 
         lb_reward_c1 = df_c1['reward'].mean() - np.sqrt(
             -np.log(self.confidence) / 2 * df_c1['n_clicks'].sum())  # cambiare df_c1['n_clicks'].sum()?
         lb_reward_c2 = df_c2['reward'].mean() - np.sqrt(
             -np.log(self.confidence) / 2 * df_c2['n_clicks'].sum())  # cambiare df_c2['n_clicks'].sum()?
-        lb_prob_c1 = df_c1['n_clicks'].sum() / df['n_clicks'].sum() - np.sqrt(
-            -np.log(self.confidence) / 2 * df_c1['n_clicks'].sum())
+        lb_prob_c1 = df_c1['n_clicks'].sum() / df['n_clicks'].sum()
+        lb_prob_c1 -= np.sqrt(-np.log(self.confidence) / (2 * df_c1['n_clicks'].sum()))
         lb_prob_c2 = df_c2['n_clicks'].sum() / df['n_clicks'].sum() - np.sqrt(
-            -np.log(self.confidence) / 2 * df_c2['n_clicks'].sum())
+            -np.log(self.confidence) / (2 * df_c2['n_clicks'].sum()))
 
         return lb_prob_c1 * lb_reward_c1 + lb_prob_c2 * lb_reward_c2
 
     def split_on_feature(self, df, splitting_feature):
-        df_c1 = df.loc[df[splitting_feature] == 0]
-        df_c2 = df.loc[df[splitting_feature] == 1]
+        df_c1 = df.loc[df[splitting_feature].astype(int) == 0]
+        df_c2 = df.loc[df[splitting_feature].astype(int) == 1]
 
         return df_c1, df_c2
 
@@ -86,9 +92,11 @@ class ContextHandler:
             split_feature_index = split_values.index(max(split_values))
 
             if (split_values[split_feature_index] > not_split_value) and len(features) > 0:
-                self.generated_contexts.pop(self.generated_contexts.index(df))
+                df_index = self.generated_contexts.index(df)
+                self.generated_contexts.pop(df_index)
                 df1, df2 = self.split_on_feature(df, features[split_feature_index])
                 self.generated_contexts.append(df1)
                 self.generated_contexts.append(df2)
-                self.gen_context(df1, features.pop(split_feature_index))
-                self.gen_context(df2, features.pop(split_feature_index))
+                features.pop(split_feature_index)
+                self.gen_context(df1, features)
+                self.gen_context(df2, features)
