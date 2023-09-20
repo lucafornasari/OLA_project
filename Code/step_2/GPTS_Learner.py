@@ -1,4 +1,4 @@
-from Learner import *
+from Code.step_2.Learner import *
 import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
@@ -11,12 +11,10 @@ class GPTS_Learner(Learner):
         self.means=np.zeros(self.n_arms)
         self.sigmas=np.ones(self.n_arms)*10
         self.pulled_arms = []
-        alpha= 5.0
-        kernel=  C(1.0,(1e-9,1e9)) *RBF(0.7, (1e-10,1e3))
-        self.gp=GaussianProcessRegressor(kernel=kernel,alpha=alpha**2, n_restarts_optimizer=20)
-        self.gp._max_iter = 10000
-        self.interval = 1
-
+        self.alpha= 1.0
+        kernel = C(1.0, (1e-9, 1e9)) * RBF(1.0, (1e-10, 1e7))
+        self.gp=GaussianProcessRegressor(kernel=self.kernel,alpha=self.alpha**2, n_restarts_optimizer = 9, normalize_y = True)
+        self.gp._max_iter = 100000
 
     def update_observations(self,arm_idx, reward):
       super().update_observations(arm_idx, reward)
@@ -26,10 +24,9 @@ class GPTS_Learner(Learner):
     def update_model(self):
       x= np.atleast_2d(self.pulled_arms).T
       y= self.collected_rewards
-      if self.t % self.interval == 0:
-          self.gp.fit(x,y)
-          self.means, self.sigmas= self.gp.predict(np.atleast_2d(self.arms).T, return_std= True)
-          self.sigmas = np.maximum(self.sigmas, 1e-2)
+      self.gp.fit(x,y)
+      self.means, self.sigmas= self.gp.predict(np.atleast_2d(self.arms).T, return_std= True)
+      self.sigmas = np.maximum(self.sigmas, 1e-2)
 
     
     def update(self,pulled_arms, reward):
