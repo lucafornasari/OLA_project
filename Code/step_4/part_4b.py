@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from Code.Environment.Environment import Environment
-from Code.step_3.GPTS_Learner_3 import GPTS_Learner_3
-from Code.step_3.GPUCB1_Learner_3 import GPUCB1_Learner_3
-from Code.step_2.Clairvoyant import *
-from Code.step_4.ContextHandler import ContextHandler
+from Code.Environment.GPTS_Learner_3 import GPTS_Learner_3
+from Code.Environment.GPUCB1_Learner_3 import GPUCB1_Learner_3
+from Code.Environment.Clairvoyant import *
+from Code.Environment.ContextHandler import ContextHandler
 
 env = Environment()
 

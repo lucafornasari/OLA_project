@@ -3,25 +3,16 @@ import random
 import matplotlib.pyplot as plt
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
-from Code.Environment.Customer import Customer
 import joblib
 
 
 class Environment:
     def __init__(self):
         self.users = []
-        self.prices = [150, 175, 190, 210, 225]
+        self.prices = [150, 200, 250, 300, 350]
         self.prod_cost = 80
-        self.bids = np.linspace(0.0, 100, 101)
+        self.bids = np.linspace(0.0, 100, 100, dtype = int)
         self.classes = ["C1", "C2", "C3"]
-
-    def generate_users(self, num_users):
-        # Generate a list of random users with random features
-        for _ in range(num_users):
-            f1 = random.randint(0, 1)
-            f2 = random.randint(0, 1)
-            user = Customer(f1, f2)
-            self.users.append(user)
 
     def get_class_from_features(self, f1, f2):
         if f1 == 0 and f2 == 0:
@@ -36,50 +27,51 @@ class Environment:
     def get_clicks(self, bid, _user_class, min_bid=10):
         # Define the function for number of clicks for a specific class
         # Return the number of clicks based on the bid and user class
-        configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
-                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 1.0},
-                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 1.0}}
+        configs = {"C1": {"max_clicks": 40, "steepness": 0.07, "noise": 1.0},
+                   "C2": {"max_clicks": 80, "steepness": 0.25, "noise": 1.0},
+                   "C3": {"max_clicks": 50, "steepness": 0.42, "noise": 1.0}}
         max_clicks = configs[_user_class]["max_clicks"]
         steepness = configs[_user_class]["steepness"]
         noise = configs[_user_class]["noise"]
 
         if bid < min_bid:
             return 0
-        ret_val = max_clicks * (1 - np.exp(-steepness * (bid - min_bid)))
+        ret_val = max_clicks * (1 - np.exp(-steepness * (bid)))
 
         return ret_val
 
     def sample_clicks(self, bid, _user_class, min_bid=10):
-        configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
-                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 1.0},
-                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 1.0}}
+        configs = {"C1": {"max_clicks": 40, "steepness": 0.07, "noise": 1.0},
+                   "C2": {"max_clicks": 80, "steepness": 0.25, "noise": 1.0},
+                   "C3": {"max_clicks": 50, "steepness": 0.42, "noise": 1.0}}
         max_clicks = configs[_user_class]["max_clicks"]
         steepness = configs[_user_class]["steepness"]
         noise = configs[_user_class]["noise"]
-        return self.get_clicks(bid, _user_class) + np.random.normal(0, noise)
+        return self.get_clicks(bid, _user_class)+np.random.normal(0, noise)
 
-    def get_costs(self, bid, _user_class, scale_factor=1, min_bid=10):
-        configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
-                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 1.0},
-                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 1.0}}
+
+    def get_costs(self, bid, _user_class, scale_factor = 1, min_bid=10):
+        configs = {"C1": {"max_clicks": 40, "steepness": 0.07, "noise": 1.0},
+                   "C2": {"max_clicks": 80, "steepness": 0.25, "noise": 1.0},
+                   "C3": {"max_clicks": 50, "steepness": 0.42, "noise": 1.0}}
         max_clicks = configs[_user_class]["max_clicks"]
         steepness = configs[_user_class]["steepness"]
 
         if bid < min_bid:
             return 0
-        ret_val = max_clicks * (1 - np.exp(-steepness * (bid - min_bid))) * 2
+        ret_val = max_clicks * (1 - np.exp(-steepness *bid)+np.sqrt(bid))
 
         return ret_val
         # return bid * scale_factor * self.get_clicks(bid, _user_class)
 
-    def sample_costs(self, bid, _user_class, scale_factor=1):
-        configs = {"C1": {"max_clicks": 40, "steepness": 0.55, "noise": 1.0},
-                   "C2": {"max_clicks": 80, "steepness": 0.95, "noise": 1.0},
-                   "C3": {"max_clicks": 50, "steepness": 1.2, "noise": 1.0}}
+    def sample_costs(self, bid, _user_class,scale_factor =1 ):
+        configs = {"C1": {"max_clicks": 40, "steepness": 0.07, "noise": 1.8},
+                   "C2": {"max_clicks": 80, "steepness": 0.25, "noise": 1.8},
+                   "C3": {"max_clicks": 50, "steepness": 0.42, "noise": 1.8}}
         max_clicks = configs[_user_class]["max_clicks"]
         steepness = configs[_user_class]["steepness"]
         noise = configs[_user_class]["noise"]
-        return self.get_costs(bid, _user_class) + np.random.normal(0, noise)
+        return self.get_costs(bid, _user_class)+np.random.normal(0, noise)
 
     def get_conversion_prob(self, price, _user_class):
         # Define the function for conversion probability for a specific class
@@ -124,66 +116,11 @@ class Environment:
                 prob = 0.05
             return prob
         else:
-            return None  # Handle the case if features do not match any class
+            return None
 
     def purchase_decision(self, price, _user_class):
         probability = self.get_conversion_prob(price, _user_class)
         return np.random.binomial(1, probability)  # Bernoulli distribution
-
-    def round(self, _user_class, pulled_arm, optimal_bid):
-        result = np.random.binomial(1, self.get_conversion_prob(self.prices[pulled_arm], _user_class),
-                                    np.round(self.get_clicks(optimal_bid, _user_class)).astype(int))
-        reward = np.sum(result) * (self.prices[pulled_arm] - self.prod_cost) - self.get_costs(optimal_bid, _user_class)
-        return np.sum(result), self.get_clicks(optimal_bid, _user_class) - np.sum(result), reward
-
-    def generate_observations(x, _user_class, noise_std):
-        return None  # n(x) + np.random.normal(0, noise_std, size=n(x).shape)
-
-    def clicks_learning(self, _user_class):
-        n_obs = 365
-        # for the 3 classes need to change the parameters a bit
-        x_obs = np.array([])
-        y_obs = np.array([])
-        noise_std = 5.0
-
-        for i in range(0, n_obs):
-            new_x_obs = np.random.choice(self.bids, 1)
-            new_y_obs = self.get_clicks(new_x_obs, _user_class)
-
-            x_obs = np.append(x_obs, new_x_obs)
-            y_obs = np.append(y_obs, new_y_obs)
-
-            X = np.atleast_2d(x_obs).T
-            Y = y_obs.ravel()
-
-            theta = 1.0
-            l = 1.0
-            kernel = C(theta, (1e-3, 1e3)) * RBF(l, (1e-3, 1e3))
-            gp = GaussianProcessRegressor(kernel=kernel, alpha=noise_std ** 2, normalize_y=True,
-                                          n_restarts_optimizer=10)  # alpha=noise_std**2
-
-            gp.fit(X, Y)
-
-            x_pred = np.atleast_2d(self.bids).T
-            y_pred, sigma = gp.predict(x_pred, return_std=True)
-
-            print(i)
-
-            self.plot_gp(x_pred, y_pred, X, Y, sigma, _user_class)
-        joblib.dump(gp, "model.joblib")
-
-    def plot_gp(self, _x_pred, _y_pred, _X, _Y, _sigma, _userclass):
-        plt.figure(364)
-        plt.plot(_x_pred, self.get_clicks(_x_pred, _userclass), 'r:', label=r'$n(x)$')
-        plt.plot(_X.ravel(), _Y, 'ro', label=u'Observed Clicks')
-        plt.plot(_x_pred, _y_pred, 'b-', label=u'Predicted Clicks')
-        plt.fill(np.concatenate([_x_pred, _x_pred[::-1]]),
-                 np.concatenate([_y_pred - 1.96 * _sigma, (_y_pred + 1.96 * _sigma)[::-1]]),
-                 alpha=.5, fc='b', ec='None', label='95% conf interval')
-        plt.xlabel('$x$')
-        plt.ylabel('$n(x)$')
-        plt.legend(loc='lower right')
-        plt.show()
 
     def plot_clicks_functions(self):
         bids = np.linspace(0, 100, 100)
@@ -215,28 +152,17 @@ class Environment:
         plt.legend()
         plt.show()
 
-    def plot_conversion_functions(self):
-        prices = np.linspace(0, 50, 100)
-        conversion_probs_C1 = [self.get_conversion_prob(price, "C1") for price in prices]
-        conversion_probs_C2 = [self.get_conversion_prob(price, "C2") for price in prices]
-        conversion_probs_C3 = [self.get_conversion_prob(price, "C3") for price in prices]
+    def round(self, _user_class, pulled_arm, optimal_bid):
+        tests=self.get_clicks(optimal_bid, _user_class)
+        positives = np.random.binomial(1, self.get_conversion_prob(self.prices[pulled_arm], _user_class), np.round(tests).astype(int))
+        reward = np.sum(positives) * (self.prices[pulled_arm] - self.prod_cost) - self.get_costs(optimal_bid, _user_class)
+        return reward, tests, np.sum(positives)
 
-        plt.plot(prices, conversion_probs_C1, label='C1')
-        plt.plot(prices, conversion_probs_C2, label='C2')
-        plt.plot(prices, conversion_probs_C3, label='C3')
-        plt.xlabel('Price')
-        plt.ylabel('Conversion Probability')
-        plt.title('Conversion Probability as Price Varies')
-        plt.legend()
-        plt.show()
-
-    def part3_round(self, _user_class, pulled_arm, pulled_bid):
-        clicks = max(0, self.sample_clicks(pulled_bid, _user_class))
-        result = np.random.binomial(1, self.get_conversion_prob(self.prices[pulled_arm], _user_class),
-                                    np.round(clicks).astype(int))
-        reward = np.sum(result) * (self.prices[pulled_arm] - self.prod_cost) - self.sample_costs(pulled_bid,
-                                                                                                 _user_class)
-        return np.sum(result), clicks - np.sum(result), reward
+    def part3_round(self, _user_class, pulled_arm_price, pulled_arm_bid):
+        tests= np.round(max(0,self.sample_clicks(pulled_arm_bid, _user_class))).astype(int)
+        positives = np.random.binomial(1, self.get_conversion_prob(self.prices[pulled_arm_price], _user_class), tests)
+        reward = np.sum(positives) *(self.prices[pulled_arm_price] - self.prod_cost) - max(0,self.sample_costs(pulled_arm_bid, _user_class))
+        return reward, tests, np.sum(positives)
 
     def part4_round(self, context_classes, pulled_arm, pulled_bid, t):
         d = {'f_1': [], 'f_2': [], 'pos_conv': [], 'n_clicks': [], 'costs': [], 'price': [], 'bid': [], 't': [], 'price_arm': [], 'bid_arm': []}
@@ -264,7 +190,19 @@ class Environment:
             d['price_arm'].append(pulled_arm)
             d['bid_arm'].append(pulled_bid)
 
-        return tot_result, tot_clicks - tot_result, tot_reward, d
+        return tot_reward, tot_clicks, tot_result, d
 
+    def seasonal_prob(self,phase,price):
+        configs={"phase_1":{150 : 0.15, 200: 0.25, 250: 0.35, 300: 0.1, 350: 0.05},
+                 "phase_2":{150 : 0.15, 200: 0.55, 250: 0.15, 300: 0.1, 350: 0.05},
+                 "phase_3":{150 : 0.15, 200: 0.15, 250: 0.2, 300: 0.40, 350: 0.05}}
+        return configs[phase][price]
+
+    def seasonal_prob_round(self, _user_class,phase, pulled_arm, optimal_bid):
+        tests= np.round(self.get_clicks(optimal_bid, _user_class)).astype(int)
+        result = np.random.binomial(1, self.seasonal_prob(phase,self.prices[pulled_arm]), tests)
+        tested_conv_prob=np.sum(result)/tests
+        reward = tests*tested_conv_prob * (self.prices[pulled_arm] - self.prod_cost) - self.get_costs(optimal_bid, _user_class)
+        return reward, tests
 # env = Environment()
 # env.clicks_learning("C1")
