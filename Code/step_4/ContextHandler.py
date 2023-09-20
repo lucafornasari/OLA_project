@@ -15,10 +15,10 @@ class ContextHandler:
         self.context_ucb = [GPUCB1_Learner_3(env.bids, env.prices)]
         self.context_classes_ts = [["00", "01", "10", "11"]]
         self.context_classes_ucb = [["00", "01", "10", "11"]]
-        d = {'f_1': [], 'f_2': [], 'pos_conv': [], 'n_clicks': [], 'costs': [], 'price': [], 'bid': [], 't': [], 'price_arm': [], 'bid_arm': []}
+        d = {'f_1': [], 'f_2': [], 'pos_conv': [], 'n_clicks': [], 'costs': [], 'price': [], 'bid': [], 't': [],
+             'price_arm': [], 'bid_arm': []}
         self.dataset_ts = pd.DataFrame(data=d)
         self.dataset_ucb = pd.DataFrame(data=d)
-        self.featuresToSplit = [0, 1]
         self.confidence = 0.95
         self.generated_contexts = []
 
@@ -96,7 +96,8 @@ class ContextHandler:
     def gen_context(self, df, features):
         if len(features) > 0:
             df.loc[:, 'reward'] = df['pos_conv'] * (df['price'] - env.prod_cost) - df['costs']
-            not_split_value = df['reward'].mean() - np.sqrt(-np.log(self.confidence) / 2 * df['n_clicks'].sum())  # da rivedere
+            not_split_value = df['reward'].mean() - np.sqrt(
+                -np.log(self.confidence) / 2 * df['n_clicks'].sum())  # da rivedere
 
             split_values = [self.get_split_value(df, f) for f in features]  # da rivedere
             split_feature_index = split_values.index(max(split_values))
@@ -118,16 +119,18 @@ class ContextHandler:
     def train_new_learners(self, ds, classes, learner):
 
         if learner == "TS":
-            i=0
+            i = 0
             for context_class in self.context_classes_ts:
                 df_class = pd.DataFrame()
                 for element in context_class:
-                    tempdf = ds.loc[(ds['f_1'].astype(int) == int(element[0])) & (ds['f_2'].astype(int) == int(element[1]))]
+                    tempdf = ds.loc[
+                        (ds['f_1'].astype(int) == int(element[0])) & (ds['f_2'].astype(int) == int(element[1]))]
                     df_class = pd.concat([df_class, tempdf])
-                df_class = df_class.sort_values(by = 't', ascending = True)
-                df_class = df_class.drop(columns = ['f_1', 'f_2'])
+                df_class = df_class.sort_values(by='t', ascending=True)
+                df_class = df_class.drop(columns=['f_1', 'f_2'])
                 df_class = df_class.groupby("t").agg({"costs": "sum", "pos_conv": "sum", "n_clicks": "sum",
-                                                      "price": "mean","bid": "mean" , "price_arm": "mean", "bid_arm": "mean"})
+                                                      "price": "mean", "bid": "mean", "price_arm": "mean",
+                                                      "bid_arm": "mean"})
 
                 for indx, row in df_class.iterrows():
                     pulled_arm_price = int(row['price_arm'])
@@ -136,16 +139,17 @@ class ContextHandler:
                     reward_input = [row['pos_conv'], row['n_clicks'] - row['pos_conv'], reward]
 
                     self.context_ts[i].update(pulled_arm_price, pulled_arm_bid, reward_input)
-                i+=1
+                i += 1
 
         if learner == "UCB":
             i = 0
             for context_class in self.context_classes_ucb:
                 df_class = pd.DataFrame()
                 for element in context_class:
-                    tempdf = ds.loc[(ds['f_1'].astype(int) == int(element[0])) & (ds['f_2'].astype(int) == int(element[1]))]
+                    tempdf = ds.loc[
+                        (ds['f_1'].astype(int) == int(element[0])) & (ds['f_2'].astype(int) == int(element[1]))]
                     df_class = pd.concat([df_class, tempdf])
-                    df_class = df_class.sort_values(by = 't', ascending = True)
+                    df_class = df_class.sort_values(by='t', ascending=True)
                     df_class = df_class.drop(columns=['f_1', 'f_2'])
                     df_class = df_class.groupby("t").agg({"costs": "sum", "pos_conv": "sum", "n_clicks": "sum",
                                                           "price": "mean", "bid": "mean", "price_arm": "mean",
@@ -159,3 +163,36 @@ class ContextHandler:
 
                     self.context_ucb[i].update(pulled_arm_price, pulled_arm_bid, reward_input)
                 i += 1
+
+    def get_regret_sum(self, learner):
+        if learner == "TS":
+            df = self.dataset_ts
+        elif learner == "UCB":
+            df = self.dataset_ucb
+        else:
+            df = None
+
+        df['reward'] = df['pos_conv'] * (df['price'] - env.prod_cost) - df['costs']
+
+        opt_prices, opt_bids = optimize(env)
+        opt = [env.get_clicks(opt_bids[customer_class], customer_class) * env.get_conversion_prob(
+            opt_prices[customer_class], customer_class) * (opt_prices[customer_class] - env.prod_cost) - env.get_costs(
+            opt_bids[customer_class], customer_class) for customer_class in env.classes]
+
+        # class 1
+        df_1 = df[(df['f_1'].astype(int) == 0) & (df['f_2'].astype(int) == 0)]
+        df_1 = df_1[['reward', 't']]
+        regret_1 = [opt[0] - r for r in df_1['reward']]
+
+        # class 2
+        df_2 = df[(df['f_1'].astype(int) == 0) & (df['f_2'].astype(int) == 1)]
+        df_2 = df_2[['reward', 't']]
+        regret_2 = [opt[1] - r for r in df_2['reward']]
+
+        # class 3
+        df_3 = df[(df['f_1'].astype(int) == 1)]
+        df_3 = df_3[['reward', 't']]
+        df_3 = df_3.groupby('t')['reward'].sum().reset_index()
+        regret_3 = [2*opt[2] - r for r in df_3['reward']]
+
+        return [r1 + r2 + r3 for r1, r2, r3 in zip(regret_1, regret_2, regret_3)]
