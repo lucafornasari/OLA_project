@@ -7,12 +7,12 @@ from Code.Environment.Clairvoyant import *
 
 env = Environment()
 
-T = 365
+T = 100
 opt_prices, opt_bids = optimize(env)
 opt = [env.get_clicks(opt_bids[customer_class], customer_class) * env.get_conversion_prob(opt_prices[customer_class],customer_class) * (opt_prices[customer_class] - env.prod_cost) - env.get_costs(opt_bids[customer_class], customer_class) for customer_class in env.classes]
 opt_sum = sum(opt)
 
-n_experiments = 3
+n_experiments = 1
 gpts_rewards_per_experiment = []
 gpucb_rewards_per_experiment = []
 gpts_regrets_per_experiment = []
@@ -34,13 +34,13 @@ for e in range(0, n_experiments):
             pulled_arm_bid, pulled_arm_price = gpts_learner[class_id].pull_arm()
             reward = env.part3_round(env.classes[class_id], pulled_arm_price, pulled_arm_bid)
             gpts_learner[class_id].update(pulled_arm_price, pulled_arm_bid, reward)
-            gpts_regrets[class_id] = np.append(gpts_regrets[class_id], opt[class_id] - reward[2])
+            gpts_regrets[class_id] = np.append(gpts_regrets[class_id], opt[class_id] - reward[0])
 
             # gpucb1 Learner
             pulled_arm_bid, pulled_arm_price = gpucb_learner[class_id].pull_arm()
             reward = env.part3_round(env.classes[class_id], pulled_arm_price, pulled_arm_bid)
             gpucb_learner[class_id].update(pulled_arm_price, pulled_arm_bid, reward)
-            gpucb_regrets[class_id] = np.append(gpucb_regrets[class_id], opt[class_id] - reward[2])
+            gpucb_regrets[class_id] = np.append(gpucb_regrets[class_id], opt[class_id] - reward[0])
 
     gpts_rewards_per_experiment.append(sum(gpts_learner[class_id].bid.collected_rewards for class_id in range(0, 3)))
     gpucb_rewards_per_experiment.append(sum(gpucb_learner[class_id].bid.collected_rewards for class_id in range(0, 3)))
