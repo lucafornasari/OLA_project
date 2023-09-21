@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from Environment import Environment
+from Code.Environment.Environment import Environment
 from UCB1_Learner import UCB1_Learner
 from Clairvoyant import*
 from tqdm import tqdm_gui
-from UCB1_Active_Learner import UCB1_Active_Learner
-from UCB1_Passive_Learner import UCB1_Passive_Learner
+from Code.Environment.UCB1_Active_Learner import UCB1_Active_Learner
+from Code.Environment.UCB1_Passive_Learner import UCB1_Passive_Learner
 
 env = Environment()
 customer_class = "C1"
