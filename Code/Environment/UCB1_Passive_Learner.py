@@ -30,3 +30,4 @@ class UCB1_Passive_Learner(Learner):
         self.empirical_means[pulled_arm] = (cumulative_rewards_delta[pulled_arm] ) / (n_tests_delta[pulled_arm])
         for a in range(self.n_arms):
             self.confidence[a] = (2 * np.log(max(0,self.t-self.delta)) / n_tests_delta[a]) ** 0.5 if n_tests_delta[a] > 0 else np.inf
+ 
