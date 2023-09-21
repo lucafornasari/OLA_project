@@ -1,4 +1,4 @@
-from Code.step_2.Learner import *
+from Code.Environment.Learner import *
 from Code.Environment.Environment import Environment
 import numpy as np
 import math

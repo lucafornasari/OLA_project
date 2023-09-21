@@ -4,6 +4,7 @@ from Code.Environment.Environment import Environment
 from Code.Environment.GPTS_Learner_3 import GPTS_Learner_3
 from Code.Environment.GPUCB1_Learner_3 import GPUCB1_Learner_3
 from Code.Environment.Clairvoyant import *
+from Code.Environment.ContextHandler import ContextHandler
 
 env = Environment()
 
@@ -21,31 +22,27 @@ gpucb_regrets_per_experiment = []
 for e in range(0, n_experiments):
     print("Starting new experiment...")
 
-    gpts_learner = [GPTS_Learner_3(env.bids, env.prices) for c in range(0, 3)]
-    gpucb_learner = [GPUCB1_Learner_3(env.bids, env.prices) for c in range(0, 3)]
-
-    gpts_regrets = [np.array([]), np.array([]), np.array([])]
-    gpucb_regrets = [np.array([]), np.array([]), np.array([])]
+    c_handler = ContextHandler()
 
     for t in range(0, T):
-
-        for class_id in range(0, 3):
+        for i in range(len(c_handler.context_ts)):
             # Thompson Sampling Learner
-            pulled_arm_bid, pulled_arm_price = gpts_learner[class_id].pull_arm()
-            reward = env.part3_round(env.classes[class_id], pulled_arm_price, pulled_arm_bid)
-            gpts_learner[class_id].update(pulled_arm_price, pulled_arm_bid, reward)
-            gpts_regrets[class_id] = np.append(gpts_regrets[class_id], opt[class_id] - reward[2])
+            pulled_arm_bid, pulled_arm_price = c_handler.context_ts[i].pull_arm()
+            reward = env.part4_round(c_handler.context_classes_ts[i], pulled_arm_price, pulled_arm_bid, t)
+            c_handler.update_dataset_ts(reward[3])
+            c_handler.context_ts[i].update(pulled_arm_price, pulled_arm_bid, reward)
 
+        for i in range(len(c_handler.context_ucb)):
             # gpucb1 Learner
-            pulled_arm_bid, pulled_arm_price = gpucb_learner[class_id].pull_arm()
-            reward = env.part3_round(env.classes[class_id], pulled_arm_price, pulled_arm_bid)
-            gpucb_learner[class_id].update(pulled_arm_price, pulled_arm_bid, reward)
-            gpucb_regrets[class_id] = np.append(gpucb_regrets[class_id], opt[class_id] - reward[2])
+            pulled_arm_bid, pulled_arm_price = c_handler.context_ucb[i].pull_arm()
+            reward = env.part4_round(c_handler.context_classes_ucb[i], pulled_arm_price, pulled_arm_bid, t)
+            c_handler.update_dataset_ucb(reward[3])
+            c_handler.context_ucb[i].update(pulled_arm_price, pulled_arm_bid, reward)
 
-    gpts_rewards_per_experiment.append(sum(gpts_learner[class_id].bid.collected_rewards for class_id in range(0, 3)))
-    gpucb_rewards_per_experiment.append(sum(gpucb_learner[class_id].bid.collected_rewards for class_id in range(0, 3)))
-    gpts_regrets_per_experiment.append(sum(gpts_regrets[class_id] for class_id in range(0, 3)))
-    gpucb_regrets_per_experiment.append(sum(gpucb_regrets[class_id] for class_id in range(0, 3)))
+    gpts_rewards_per_experiment.append(sum(c.bid.collected_rewards for c in c_handler.context_ts))
+    gpucb_rewards_per_experiment.append(sum(c.bid.collected_rewards for c in c_handler.context_ucb))
+    gpts_regrets_per_experiment.append(c_handler.get_regret_sum("TS"))
+    gpucb_regrets_per_experiment.append(c_handler.get_regret_sum("UCB"))
 
     print('Finished experiment #', e)
 
