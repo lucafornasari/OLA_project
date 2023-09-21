@@ -136,7 +136,7 @@ class ContextHandler:
                     pulled_arm_price = int(row['price_arm'])
                     pulled_arm_bid = int(row['bid_arm'])
                     reward = row['pos_conv'] * (row['price'] - env.prod_cost) - row['costs']
-                    reward_input = [row['pos_conv'], row['n_clicks'] - row['pos_conv'], reward]
+                    reward_input = [reward, row['n_clicks'], row['pos_conv']]
 
                     self.context_ts[i].update(pulled_arm_price, pulled_arm_bid, reward_input)
                 i += 1
@@ -159,7 +159,7 @@ class ContextHandler:
                     pulled_arm_price = int(row['price_arm'])
                     pulled_arm_bid = int(row['bid_arm'])
                     reward = row['pos_conv'] * (row['price'] - env.prod_cost) - row['costs']
-                    reward_input = [row['pos_conv'], row['n_clicks'] - row['pos_conv'], reward]
+                    reward_input = [reward, row['n_clicks'], row['pos_conv']]
 
                     self.context_ucb[i].update(pulled_arm_price, pulled_arm_bid, reward_input)
                 i += 1
