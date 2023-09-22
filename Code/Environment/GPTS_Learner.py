@@ -14,7 +14,7 @@ class GPTS_Learner(Learner):
         self.pulled_arms = []
         alpha = 1.0
         kernel = C(1.0, (1e-9, 1e9)) * RBF(1.0, (1e-10, 1e7))
-        self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha ** 2, n_restarts_optimizer=5)
+        self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha ** 2, n_restarts_optimizer=7)
         self.gp._max_iter = 100000
         self.interval = 1
 
