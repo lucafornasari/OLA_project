@@ -40,10 +40,7 @@ def optimize(_env):
             if reward_1 > reward:
                 opt_bids[c] = b
                 reward = reward_1
-        print(reward)
 
-    print(opt_prices)
-    print(opt_bids)
     return opt_prices, opt_bids
 
 
