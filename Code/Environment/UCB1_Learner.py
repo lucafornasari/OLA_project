@@ -4,21 +4,12 @@ from Code.Environment.Learner import *
 class UCB1_Learner(Learner):
     def __init__(self, prices):
         super().__init__(prices)
-        # self.n_arms = self.n_arms
-        # self.cumulative_rewards = np.zeros(self.n_arms)  # cumulative rewards for each arm
-        # self.pulls = np.zeros(self.n_arms)  # number of pulls for each arm
 
         self.empirical_means = np.zeros(self.n_arms)
         self.confidence = np.array([np.inf] * self.n_arms)
         self.n_tests = np.zeros(self.n_arms)
 
     def pull_arms(self):
-        # t = np.sum(self.pulls) + 1
-        # exploration_bonus = np.sqrt((2 * np.log(t)) / (self.pulls + 1e-3))
-        # ucb_values = self.cumulative_rewards / (self.pulls + 1e-3) + exploration_bonus
-        # idx = np.argmax(ucb_values)
-        # print("UCB pulled arm: ", idx)
-        # return idx
         upper_conf = (self.empirical_means + self.confidence) * self.rewards
         return np.random.choice(np.where(upper_conf == upper_conf.max())[0])
 

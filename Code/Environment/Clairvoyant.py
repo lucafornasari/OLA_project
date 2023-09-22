@@ -1,5 +1,3 @@
-import numpy as np
-import random
 from Code.Environment.Environment import Environment
 
 
@@ -46,7 +44,7 @@ def optimize(_env):
 
     print(opt_prices)
     print(opt_bids)
-    return opt_prices,opt_bids
+    return opt_prices, opt_bids
 
 
 env = Environment()

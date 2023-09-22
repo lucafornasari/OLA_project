@@ -1,21 +1,16 @@
 from Code.Environment.Learner import *
-from Code.Environment.Learner import *
 
 
 class TS_Learner(Learner):
     def __init__(self, prices):
-        super().__init__(prices)  # calling the construction of super class passing the n_arms parameter
+        super().__init__(prices)
         self.beta_parameters = np.ones((self.n_arms, 2))  # parameters of Beta distribution
 
     def pull_arms(self):
         idx = np.argmax(np.random.beta(self.beta_parameters[:, 0], self.beta_parameters[:, 1]) * self.rewards)
-        # Beta distributions are defined by 2 parameters: alpha and beta
-        # Beta distribution draws the probability of each pulled arm
         return idx
 
     def update(self, pulled_arm, _reward):
         self.update_observations(pulled_arm, _reward[0])
-        # Add the success (if any) to alpha
         self.beta_parameters[pulled_arm, 0] = self.beta_parameters[pulled_arm, 0] + _reward[2]
-        # Add the failure (if any) to beta (1-rew=1 iff rew=0 iff fail)
         self.beta_parameters[pulled_arm, 1] = self.beta_parameters[pulled_arm, 1] + (_reward[1]-_reward[2])

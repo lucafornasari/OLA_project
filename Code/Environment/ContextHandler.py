@@ -74,14 +74,11 @@ class ContextHandler:
 
         lb_reward_c1 = self.get_context_reward(df_c1)
         lb_reward_c2 = self.get_context_reward(df_c2)
-        # lb_reward_c1 = df_c1['reward'].mean() - np.sqrt(
-        #     -np.log(self.confidence) / 2 * df_c1['n_clicks'].sum())  # cambiare df_c1['n_clicks'].sum()?
-        # lb_reward_c2 = df_c2['reward'].mean() - np.sqrt(
-        #     -np.log(self.confidence) / 2 * df_c2['n_clicks'].sum())  # cambiare df_c2['n_clicks'].sum()?
+
         lb_prob_c1 = df_c1['n_clicks'].sum() / df['n_clicks'].sum()
         lb_prob_c1 -= np.sqrt(-np.log(self.confidence) / (2 * df_c1['n_clicks'].sum()))
-        lb_prob_c2 = df_c2['n_clicks'].sum() / df['n_clicks'].sum() - np.sqrt(
-            -np.log(self.confidence) / (2 * df_c2['n_clicks'].sum()))
+        lb_prob_c2 = df_c2['n_clicks'].sum() / df['n_clicks'].sum()
+        lb_prob_c2 -= np.sqrt(-np.log(self.confidence) / (2 * df_c2['n_clicks'].sum()))
 
         return lb_prob_c1 * lb_reward_c1 + lb_prob_c2 * lb_reward_c2
 
@@ -117,7 +114,6 @@ class ContextHandler:
                 self.gen_context(df2, features.copy())
 
     def train_new_learners(self, ds, classes, learner):
-
         if learner == "TS":
             i = 0
             for context_class in self.context_classes_ts:
@@ -199,9 +195,6 @@ class ContextHandler:
         return [r1 + r2 + r3 for r1, r2, r3 in zip(regret_1, regret_2, regret_3)]
 
     def get_context_reward(self, dataset):
-        # reward = dataset['reward'].max()
-        # reward -= np.sqrt(-(np.log(self.confidence) / (len(dataset) * 2)))
-
         prices = dataset['price'].unique().tolist()
         conv_rates = []
         for p in prices:
@@ -210,9 +203,6 @@ class ContextHandler:
 
         earnings = [conv_rates[i] * (prices[i] - env.prod_cost) for i in range(len(prices))]
         opt_earning = np.max(earnings)
-        # opt_price_index = earnings.index(opt_earning)
-        # opt_earning -= np.sqrt(-(np.log(self.confidence) / (dataset[(dataset['price'].astype(int) == prices[opt_price_index])]['n_clicks'].mean() * 2)))
-        #opt_earning -= np.sqrt(-(np.log(self.confidence) / (dataset['n_clicks'].sum() * 2)))
 
         bids = dataset['bid'].unique().tolist()
         n_clicks = []
