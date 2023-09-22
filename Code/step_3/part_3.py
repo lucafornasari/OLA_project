@@ -14,7 +14,7 @@ margin = opt_price - env.prod_cost
 opt_bid = opt_bids["C1"]
 opt = env.get_clicks(opt_bid, customer_class) * env.get_conversion_prob(opt_price, customer_class) * margin - env.get_costs(opt_bid, customer_class)
 
-n_experiments = 1
+n_experiments = 3
 gpts_rewards_per_experiment = []
 gpucb_rewards_per_experiment = []
 gpts_regrets_per_experiment = []

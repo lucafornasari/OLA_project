@@ -8,7 +8,7 @@ from Code.Environment.UCB1_Passive_Learner import UCB1_Passive_Learner
 env = Environment()
 customer_class = "C1"
 
-T = 120
+T = 365
 _, opt_bids = optimize(env)
 opt_bid = opt_bids["C1"]
 phase = ["phase_1", "phase_2", "phase_3"]
@@ -18,7 +18,7 @@ for i in range(len(phase)):
     opt_rewards[i] = env.get_clicks(opt_bid, customer_class) * env.seasonal_prob(phase[i], opt_prices[i]) * (
                 opt_prices[i] - env.prod_cost) - env.get_costs(opt_bid, customer_class)
 
-n_experiments = 1
+n_experiments = 5
 
 ucb_active_rewards_per_experiment = []
 ucb_active_regrets_per_experiment = []
