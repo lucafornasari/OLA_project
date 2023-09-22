@@ -5,10 +5,13 @@ from Code.Environment.GPTS_Learner_3 import GPTS_Learner_3
 from Code.Environment.GPUCB1_Learner_3 import GPUCB1_Learner_3
 from Code.Environment.Clairvoyant import *
 from Code.Environment.ContextHandler import ContextHandler
+import warnings
+
+warnings.filterwarnings("ignore")
 
 env = Environment()
 
-T = 150
+T = 60
 opt_prices, opt_bids = optimize(env)
 opt = [env.get_clicks(opt_bids[customer_class], customer_class) * env.get_conversion_prob(opt_prices[customer_class],customer_class) * (opt_prices[customer_class] - env.prod_cost) - env.get_costs(opt_bids[customer_class], customer_class) for customer_class in env.classes]
 opt_sum = sum(opt)
@@ -24,9 +27,6 @@ for e in range(0, n_experiments):
 
     c_handler = ContextHandler()
 
-    gpts_regrets = [np.array([]), np.array([]), np.array([])]
-    gpucb_regrets = [np.array([]), np.array([]), np.array([])]
-
     for t in range(0, T):
 
         if t % 14 == 0 and t != 0:
@@ -39,8 +39,6 @@ for e in range(0, n_experiments):
             reward = env.part4_round(c_handler.context_classes_ts[i], pulled_arm_price, pulled_arm_bid, t)
             c_handler.update_dataset_ts(reward[3])
             c_handler.context_ts[i].update(pulled_arm_price, pulled_arm_bid, reward)
-            #opt_i = get_opt_from_classes(c_handler.context_classes_ts[i])
-            #gpts_regrets[class_id] = np.append(gpts_regrets[class_id], opt[class_id] - reward[2])
 
         for i in range(len(c_handler.context_ucb)):
             # gpucb1 Learner
@@ -48,14 +46,11 @@ for e in range(0, n_experiments):
             reward = env.part4_round(c_handler.context_classes_ucb[i], pulled_arm_price, pulled_arm_bid, t)
             c_handler.update_dataset_ucb(reward[3])
             c_handler.context_ucb[i].update(pulled_arm_price, pulled_arm_bid, reward)
-            #gpucb_regrets[class_id] = np.append(gpucb_regrets[class_id], opt[class_id] - reward[2])
 
     gpts_rewards_per_experiment.append(sum(c.bid.collected_rewards for c in c_handler.context_ts))
     gpucb_rewards_per_experiment.append(sum(c.bid.collected_rewards for c in c_handler.context_ucb))
     gpts_regrets_per_experiment.append(c_handler.get_regret_sum("TS"))
     gpucb_regrets_per_experiment.append(c_handler.get_regret_sum("UCB"))
-    # gpts_regrets_per_experiment.append(sum(gpts_regrets[class_id] for class_id in range(0, 3)))
-    # gpucb_regrets_per_experiment.append(sum(gpucb_regrets[class_id] for class_id in range(0, 3)))
 
     print('Finished experiment #', e)
 

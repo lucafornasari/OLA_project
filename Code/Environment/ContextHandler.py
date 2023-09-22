@@ -36,6 +36,7 @@ class ContextHandler:
         elif learner == "UCB":
             df = self.dataset_ucb.copy()
 
+        df = df.tail(56)
         df['reward'] = df['pos_conv'] * (df['price'] - env.prod_cost) - df['costs']
 
         self.generated_contexts = []
@@ -55,15 +56,6 @@ class ContextHandler:
             self.context_ucb = [GPUCB1_Learner_3(env.bids, env.prices) for c in self.context_classes_ucb]
             self.train_new_learners(self.dataset_ucb, self.context_classes_ts, learner)
 
-        # retrainare i learner
-
-        # if learner == "TS":
-        #     self.context_ts = [GPTS_Learner_3(env.bids, env.prices) for c in self.context_classes_ts]
-        #     self.train_new_learners(self.dataset_ts, self.context_classes_ts, learner)
-        # elif learner == "UCB":
-        #     self.context_ucb = [GPUCB1_Learner_3(env.bids, env.prices) for c in self.context_classes_ucb]
-        #     self.train_new_learners(self.dataset_ucb, self.context_classes_ts, learner)
-
     def extract_classes_from_df(self):
         temp_classes = []
 
@@ -79,7 +71,6 @@ class ContextHandler:
     def get_split_value(self, df, splitting_feature):
         df_c1 = df.loc[df[splitting_feature].astype(int) == 0]
         df_c2 = df.loc[df[splitting_feature].astype(int) == 1]
-
 
         lb_reward_c1 = self.get_context_reward(df_c1)
         lb_reward_c2 = self.get_context_reward(df_c2)
@@ -102,11 +93,14 @@ class ContextHandler:
 
     def gen_context(self, df, features):
         if len(features) > 0:
-            df.loc[:, 'reward'] = df['pos_conv'] * (df['price'] - env.prod_cost) - df['costs']
+            df['reward'] = df['pos_conv'] * (df['price'] - env.prod_cost) - df['costs']
             not_split_value = self.get_context_reward(df)
 
-            split_values = [self.get_split_value(df, f) for f in features]  # da rivedere
+            split_values = [self.get_split_value(df, f) for f in features]
             split_feature_index = split_values.index(max(split_values))
+
+            print("not split value with features " + str(features) + ": " + str(not_split_value))
+            print("split values:" + str(split_values))
 
             if (split_values[split_feature_index] > not_split_value) and len(features) > 0:
                 for idx, df_in_list in enumerate(self.generated_contexts):
@@ -119,8 +113,8 @@ class ContextHandler:
                 self.generated_contexts.append(df1)
                 self.generated_contexts.append(df2)
                 features.pop(split_feature_index)
-                self.gen_context(df1, features)
-                self.gen_context(df2, features)
+                self.gen_context(df1, features.copy())
+                self.gen_context(df2, features.copy())
 
     def train_new_learners(self, ds, classes, learner):
 
@@ -197,24 +191,28 @@ class ContextHandler:
 
         # class 3
         df_3 = df[(df['f_1'].astype(int) == 1)]
-        # df_3 = df_3[['reward', 't']]
-        # df_3 = df_3.groupby('t')['reward'].mean().reset_index()
-        df_3 = df_3[['t', 'pos_conv', 'price', 'costs']]
-        df_3 = df_3.groupby("t").agg({"costs": "sum", "pos_conv": "sum", "price": "mean"})
         df_3['reward'] = df_3['pos_conv'] * (df_3['price'] - env.prod_cost) - df_3['costs']
-        regret_3 = [opt[2] - r for r in df_3['reward']]
+        df_3 = df_3[['reward', 't']]
+        df_3 = df_3.groupby('t')['reward'].sum().reset_index()
+        regret_3 = [2*opt[2] - r for r in df_3['reward']]
 
         return [r1 + r2 + r3 for r1, r2, r3 in zip(regret_1, regret_2, regret_3)]
 
     def get_context_reward(self, dataset):
-        confidence = 0.95
+        # reward = dataset['reward'].max()
+        # reward -= np.sqrt(-(np.log(self.confidence) / (len(dataset) * 2)))
+
         prices = dataset['price'].unique().tolist()
         conv_rates = []
         for p in prices:
             ds = dataset[(dataset['price'].astype(int) == p)]
-            conv_rates.append(ds['pos_conv'].sum()/ds['n_clicks'].sum())
-        opt_earning = np.max([conv_rates[i] * (prices[i]-env.prod_cost) for i in range(len(prices))])
-        opt_earning -= np.sqrt(-(np.log(confidence) / (len(dataset)*2))) * opt_earning
+            conv_rates.append(ds['pos_conv'].sum() / ds['n_clicks'].sum())
+
+        earnings = [conv_rates[i] * (prices[i] - env.prod_cost) for i in range(len(prices))]
+        opt_earning = np.max(earnings)
+        # opt_price_index = earnings.index(opt_earning)
+        # opt_earning -= np.sqrt(-(np.log(self.confidence) / (dataset[(dataset['price'].astype(int) == prices[opt_price_index])]['n_clicks'].mean() * 2)))
+        #opt_earning -= np.sqrt(-(np.log(self.confidence) / (dataset['n_clicks'].sum() * 2)))
 
         bids = dataset['bid'].unique().tolist()
         n_clicks = []
@@ -224,5 +222,5 @@ class ContextHandler:
             cum_costs.append(dataset[(dataset['bid'] == bid)]['costs'].mean())
 
         reward = np.max([(n_clicks[i] * opt_earning - cum_costs[i]) for i in range(len(bids))])
-        reward -= np.sqrt(-(np.log(confidence) / (len(dataset)*2))) * reward
+        reward -= np.sqrt(-(np.log(self.confidence) / (dataset['n_clicks'].sum() * 2)))  # * reward
         return reward
