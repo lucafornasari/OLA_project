@@ -8,7 +8,7 @@ from Code.Environment.Clairvoyant import*
 env = Environment()
 customer_class = "C1"
 
-T = 250
+T = 365
 opt_prices, opt_bids = optimize(env)
 opt_price = opt_prices["C1"]
 margin = opt_price - env.prod_cost
@@ -17,7 +17,7 @@ opt = env.get_clicks(opt_bid, customer_class) * env.get_conversion_prob(opt_pric
                                                                         customer_class) * margin - env.get_costs(
     opt_bid, customer_class)
 
-n_experimengpts = 1
+n_experimengpts = 3
 gpts_rewards_per_experiment = []
 gpucb_rewards_per_experiment = []
 gpts_regregpts_per_experiment = []
@@ -122,15 +122,15 @@ plt.title("Standard Deviation of Cumulative Reward")
 plt.subplot(2, 2, 3)  # 2 righe, 1 colonna, primo subplot
 avg_cumsum_regregpts_gpts = gpts_regregpts_per_experiment_cumsum.mean(axis=0)
 avg_cumsum_regregpts_gpucb = gpucb_regregpts_per_experiment_cumsum.mean(axis=0)
-plt.plot(avg_cumsum_regregpts_gpts, "-", label="cumsum avg regregpts gpts", color="r")
-plt.plot(avg_cumsum_regregpts_gpucb, "-", label="cumsum avg regregpts gpucb", color="g")
+plt.plot(avg_cumsum_regregpts_gpts, "-", label="cumsum avg regret gpts", color="r")
+plt.plot(avg_cumsum_regregpts_gpucb, "-", label="cumsum avg regret gpucb", color="g")
 plt.legend()
 plt.title("Average of Cumulative Regret")
 plt.subplot(2, 2, 4)  # 2 righe, 1 colonna, primo subplot
 std_cumsum_regregpts_gpts = np.std(gpts_regregpts_per_experiment_cumsum, axis=0)
 std_cumsum_regregpts_gpucb = np.std(gpucb_regregpts_per_experiment_cumsum, axis=0)
-plt.plot(std_cumsum_regregpts_gpts, "-", label="cumsum std regregpts gpts", color="r")
-plt.plot(std_cumsum_regregpts_gpucb, "-", label="cumsum std regregpts gpucb", color="g")
+plt.plot(std_cumsum_regregpts_gpts, "-", label="cumsum std regret gpts", color="r")
+plt.plot(std_cumsum_regregpts_gpucb, "-", label="cumsum std regret gpucb", color="g")
 plt.legend()
 plt.title("Standard Deviation of Cumulative Regret")
 
