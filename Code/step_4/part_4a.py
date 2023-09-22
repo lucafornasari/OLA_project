@@ -7,7 +7,7 @@ from Code.Environment.Clairvoyant import *
 
 env = Environment()
 
-T = 100
+T = 365
 opt_prices, opt_bids = optimize(env)
 opt = [env.get_clicks(opt_bids[customer_class], customer_class) * env.get_conversion_prob(opt_prices[customer_class],customer_class) * (opt_prices[customer_class] - env.prod_cost) - env.get_costs(opt_bids[customer_class], customer_class) for customer_class in env.classes]
 opt_sum = sum(opt)

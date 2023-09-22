@@ -15,7 +15,7 @@ margin = opt_price - env.prod_cost
 opt_bid=opt_bids["C1"]
 opt = env.get_clicks(opt_bid, customer_class) * env.get_conversion_prob(opt_price, customer_class) * margin - env.get_costs(opt_bid, customer_class)
 
-n_experimengpts = 3
+n_experimengpts = 1
 gpts_rewards_per_experiment = []
 gpucb_rewards_per_experiment = []
 gpts_regregpts_per_experiment = []
@@ -37,14 +37,14 @@ for e in range(0, n_experimengpts):
         reward = env .part3_round(customer_class, pulled_arm_price, pulled_arm_bid)
         gpts_learner.update(pulled_arm_price,pulled_arm_bid, reward)
         #print(gpucb_learner.pulled_arms)
-        gpts_regregpts.append(opt - reward[2])
+        gpts_regregpts.append(opt - reward[0])
        
         # gpucb1 Learner
         pulled_arm_bid, pulled_arm_price = gpucb_learner.pull_arm()
         reward = env .part3_round(customer_class, pulled_arm_price, pulled_arm_bid)
         gpucb_learner.update(pulled_arm_price,pulled_arm_bid, reward)
         #print(gpucb_learner.pulled_arms)
-        gpucb_regregpts.append(opt - reward[2])
+        gpucb_regregpts.append(opt - reward[0])
 
     gpts_rewards_per_experiment.append(gpts_learner.bid.collected_rewards.tolist())
     gpucb_rewards_per_experiment.append(gpucb_learner.bid.collected_rewards.tolist())

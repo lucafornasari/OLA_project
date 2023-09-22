@@ -206,7 +206,7 @@ class ContextHandler:
         conv_rates = []
         for p in prices:
             ds = dataset[(dataset['price'].astype(int) == p)]
-            conv_rates.append(ds['pos_conv'].sum() / ds['n_clicks'].sum())
+            conv_rates.append(ds['pos_conv'].sum() / dataset['n_clicks'].sum())
 
         earnings = [conv_rates[i] * (prices[i] - env.prod_cost) for i in range(len(prices))]
         opt_earning = np.max(earnings)

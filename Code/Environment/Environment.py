@@ -65,9 +65,9 @@ class Environment:
         # return bid * scale_factor * self.get_clicks(bid, _user_class)
 
     def sample_costs(self, bid, _user_class,scale_factor =1 ):
-        configs = {"C1": {"max_clicks": 40, "steepness": 0.07, "noise": 1.8},
-                   "C2": {"max_clicks": 80, "steepness": 0.25, "noise": 1.8},
-                   "C3": {"max_clicks": 50, "steepness": 0.42, "noise": 1.8}}
+        configs = {"C1": {"max_clicks": 40, "steepness": 0.07, "noise": 1.6},
+                   "C2": {"max_clicks": 80, "steepness": 0.25, "noise": 1.6},
+                   "C3": {"max_clicks": 50, "steepness": 0.42, "noise": 1.6}}
         max_clicks = configs[_user_class]["max_clicks"]
         steepness = configs[_user_class]["steepness"]
         noise = configs[_user_class]["noise"]
