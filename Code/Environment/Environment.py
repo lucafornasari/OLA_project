@@ -79,9 +79,9 @@ class Environment:
         if _user_class == "C1":
             prob = None
             if price == self.prices[0]:
-                prob = 0.35
-            elif price == self.prices[1]:
                 prob = 0.15
+            elif price == self.prices[1]:
+                prob = 0.35
             elif price == self.prices[2]:
                 prob = 0.2
             elif price == self.prices[3]:
@@ -98,7 +98,7 @@ class Environment:
             elif price == self.prices[2]:
                 prob = 0.35
             elif price == self.prices[3]:
-                prob = 0.1
+                prob = 0.15
             elif price == self.prices[4]:
                 prob = 0.05
             return prob
@@ -109,11 +109,11 @@ class Environment:
             elif price == self.prices[1]:
                 prob = 0.1
             elif price == self.prices[2]:
-                prob = 0.1
-            elif price == self.prices[3]:
                 prob = 0.2
+            elif price == self.prices[3]:
+                prob = 0.30
             elif price == self.prices[4]:
-                prob = 0.4
+                prob = 0.05
             return prob
         else:
             return None
@@ -166,7 +166,7 @@ class Environment:
 
     def part4_round(self, context_classes, pulled_arm, pulled_bid, t):
         d = {'f_1': [], 'f_2': [], 'pos_conv': [], 'n_clicks': [], 'costs': [], 'price': [], 'bid': [], 't': [], 'price_arm': [], 'bid_arm': []}
-        tot_positive = 0
+        tot_result = 0
         tot_clicks = 0
         tot_reward = 0
         for c in context_classes:
@@ -178,19 +178,19 @@ class Environment:
             clicks = max(0, self.sample_clicks(pulled_bid, user_class))
             d['n_clicks'].append(clicks)
             positive = np.sum(np.random.binomial(1, self.get_conversion_prob(self.prices[pulled_arm], user_class),
-                                                 np.round(clicks).astype(int)))
+                                               np.round(clicks).astype(int)))
             d['pos_conv'].append(positive)
             costs = self.sample_costs(pulled_bid, user_class)
             reward = positive * (self.prices[pulled_arm] - self.prod_cost) - costs
             d['costs'].append(costs)
-            tot_positive += positive
+            tot_result += positive
             tot_clicks += clicks
             tot_reward += reward
             d['t'].append(t)
             d['price_arm'].append(pulled_arm)
             d['bid_arm'].append(pulled_bid)
 
-        return tot_reward, tot_clicks, tot_positive, d
+        return tot_reward, tot_clicks, tot_result, d
 
     def seasonal_prob(self,phase,price):
         configs={"phase_1":{150 : 0.15, 200: 0.25, 250: 0.35, 300: 0.1, 350: 0.05},
