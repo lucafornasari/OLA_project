@@ -8,7 +8,7 @@ from Code.Environment.UCB1_Passive_Learner import UCB1_Passive_Learner
 env = Environment()
 customer_class = "C1"
 
-T = 365
+T = 366
 _, opt_bids = optimize(env)
 opt_bid = opt_bids["C1"]
 phase = ["phase_1", "phase_2", "phase_3"]

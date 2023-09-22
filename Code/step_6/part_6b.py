@@ -48,7 +48,6 @@ for e in range(0, n_experiments):
     change_day = random.randint(2, 8)
 
     for t in range(T):
-        print(f't: {t}')
         if counter == change_day:
             current_phase_index = (current_phase_index + 1) % len(phase)
             counter = 0
